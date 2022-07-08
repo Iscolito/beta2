@@ -21,7 +21,7 @@ position=[[34.15,109.32]]
 for i in range(df.shape[0]):
     position.append([df.values[i,1],df.values[i,2]])
 
-st.markdown('书沁校园，情暖蓝田')
+st.markdown('书沁蓝田，情暖校园')
 #页眉
 st.title('蓝田教育调研数据统计')
 
