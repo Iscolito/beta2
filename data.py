@@ -12,8 +12,38 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 import time
+import glob
+from PIL import Image
+# PIL库仅支持到python2.7，在python3之后需要下载Pillow库，但是代码仍保持PIL
 
-#读取基本数据集
+# 页眉
+st.info('书沁蓝田，情暖校园')
+
+st.title('支教活动纪实')
+
+# 调研纪实
+days = ['第一天', '第二天','第三天','第四天','第五天','第六天','第七天','第八天']
+day = st.selectbox(
+  "您想查看哪一天的纪实？",
+  days,
+  index=1
+  )
+day_number = days.index(day)+1
+source_link = 'D{}/*.jpg'.format(day_number)
+image_D1_source = glob.glob(source_link)
+if len(image_D1_source)==0:
+    st.warning('这一天纪实还未更新~')
+image_D1 = []
+for i in range(len(image_D1_source)):
+    image_D1.append(Image.open(image_D1_source[i]))
+    # /*为表示“所有”含义的通配符
+    st.image(image_D1[i])
+    # clamp为图像夹钳，用于固定像素，但是对于url引用无用
+
+
+# 教育调研
+
+# 读取基本数据集
 df=pd.read_csv("list.csv")
 department = df['学校'].unique().tolist()#学校列
 number = df['学生人数'].unique().tolist()#人数列
@@ -21,11 +51,10 @@ position=[[34.15,109.32]]
 for i in range(df.shape[0]):
     position.append([df.values[i,1],df.values[i,2]])
 
-st.markdown('书沁蓝田，情暖校园')
-#页眉
+
 st.title('蓝田教育调研数据统计')
 
-#下拉框
+# 下拉框
 st.code('单个学校查询')
 st.markdown('(请在左侧下拉框中选择学校)')
 product_list = df['学校'].unique()
@@ -38,12 +67,12 @@ part_df = df[(df['学校'] == product_type)]
 if product_type!='无':
     st.write(part_df)
 
-#数据筛选
+# 数据筛选
 number_selection = st.slider('学生人数:',min_value=min(number),max_value=max(number),value=(min(number), max(number)))
 st.text('(根据年龄筛选信息拖动数据条，以显示不同条件下的统计图)')
 department_selection = st.multiselect('数据选项:',department,default=department)
 
-#年龄分布图
+# 年龄分布图
 st.header('1.年龄分布图')
 mask = (df['学生人数'].between(*number_selection)) & (df['学校'].isin(department_selection))
 number_of_result1 = df[mask].shape[0]
@@ -58,7 +87,7 @@ df_grouped2=pd.DataFrame({'学校':df[mask]['学校'],'学生人数':df[mask]['�
 st.header('2.统计表')
 st.write(df_grouped2)
 
-#地图
+# 地图
 st.header('3.地图')
 st.text('取决于您的网速，加载可能需要时间')
 
@@ -66,7 +95,7 @@ part_df=pd.DataFrame(
     position,
     columns=['lat', 'lon'])
 st.map(part_df)
-#进度条显示
+# 进度条显示
 latest_iteration = st.empty()
 bar = st.progress(0)
 for i in range(100):
