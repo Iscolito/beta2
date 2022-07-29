@@ -1,9 +1,4 @@
 # -*- coding = utf-8 -*-
-# @Time : 2022/7/8 8:56
-# @Author : Iscolito
-# @File : data.py
-# @Software : PyCharm
-# -*- coding = utf-8 -*-
 # @Time : 2022/7/7 23:29
 # @Author : Iscolito
 # @File : data.py
@@ -15,6 +10,8 @@ import time
 import glob
 from PIL import Image
 # PIL库仅支持到python2.7，在python3之后需要下载Pillow库，但是代码仍保持PIL
+import webbrowser
+# 包含在httplib2库中
 
 # 页眉
 st.info('书沁蓝田，情暖校园')
@@ -26,7 +23,7 @@ days = ['第一天', '第二天','第三天','第四天','第五天','第六天'
 day = st.selectbox(
   "您想查看哪一天的纪实？",
   days,
-  index=1
+  index=0
   )
 day_number = days.index(day)+1
 source_link = 'D{}/*.jpg'.format(day_number)
@@ -89,17 +86,14 @@ st.write(df_grouped2)
 
 # 地图
 st.header('3.地图')
+st.code('①在线调用地图，无信息显示')
 st.text('取决于您的网速，加载可能需要时间')
-
-part_df=pd.DataFrame(
+part_df = pd.DataFrame(
     position,
     columns=['lat', 'lon'])
 st.map(part_df)
-# 进度条显示
-latest_iteration = st.empty()
-bar = st.progress(0)
-for i in range(100):
-  # Update the progress bar with each iteration.
-  latest_iteration.text(f'当前加载进度 {i+1}')
-  bar.progress(i + 1)
-  time.sleep(0.1)
+
+# 查看外部交互地图
+st.code('②本地交互地图，可查看信息')
+if st.button('显示本地交互地图'):
+    webbrowser.open_new_tab('map.html')
