@@ -10,8 +10,6 @@ import time
 import glob
 from PIL import Image
 # PIL库仅支持到python2.7，在python3之后需要下载Pillow库，但是代码仍保持PIL
-import webbrowser
-# 包含在httplib2库中
 
 # 页眉
 st.info('书沁蓝田，情暖校园')
@@ -93,7 +91,4 @@ part_df = pd.DataFrame(
     columns=['lat', 'lon'])
 st.map(part_df)
 
-# 查看外部交互地图
-st.code('②本地交互地图，可查看信息')
-if st.button('显示本地交互地图'):
-    webbrowser.open_new_tab('map.html')
+
