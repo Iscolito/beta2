@@ -4,4 +4,5 @@ numpy
 streamlit
 plotly
 Pillow
-httplib2
+pyecharts
+datetime
