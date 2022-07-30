@@ -10,20 +10,91 @@ import time
 import glob
 from PIL import Image
 # PIL库仅支持到python2.7，在python3之后需要下载Pillow库，但是代码仍保持PIL
+import requests
+import datetime
+from pyecharts.charts import *
+from pyecharts.globals import ThemeType
+from pyecharts import options as opts
+from pyecharts.commons.utils import JsCode
+import streamlit.components.v1 as components
 
+
+st.set_page_config(page_title="书沁蓝田，情暖校园",page_icon=":rainbow:",layout="wide",initial_sidebar_state="auto")
 # 页眉
-st.info('书沁蓝田，情暖校园')
+st.info('书沁蓝田，情暖校园:heart:')
 
-st.title('支教活动纪实')
+# 天气
+st.session_state.date_time=datetime.datetime.now() + datetime.timedelta(hours=8)
+@st.cache(ttl=3600)
+def get_city_weather(cityId):
+    url='https://h5ctywhr.api.moji.com/weatherDetail'
+    headers={'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    data={"cityId":cityId,"cityType":0}
+    r=requests.post(url,headers=headers,json=data)
+    result=r.json()
+
+    # today forecast
+    forecastToday=dict(
+        humidity=f"{result['condition']['humidity']}%",
+        temp=f"{result['condition']['temp']}°C",
+        realFeel=f"{result['condition']['realFeel']}°C",
+        weather=result['condition']['weather'],
+        wind=f"{result['condition']['windDir']}{result['condition']['windLevel']}级",
+        updateTime=(datetime.datetime.fromtimestamp(result['condition']['updateTime'])+datetime.timedelta(hours=8)).strftime('%H:%M:%S')
+    )
+
+    # 24 hours forecast
+    forecastHours=[]
+    for i in result['forecastHours']['forecastHour']:
+        tmp={}
+        tmp['PredictTime']=(datetime.datetime.fromtimestamp(i['predictTime'])+datetime.timedelta(hours=8)).strftime('%H:%M')
+        tmp['Temperature']=i['temp']
+        tmp['Body Temperature']=i['realFeel']
+        tmp['Humidity']=i['humidity']
+        tmp['Weather']=i['weather']
+        tmp['Wind']=f"{i['windDesc']}{i['windLevel']}级"
+        forecastHours.append(tmp)
+    df_forecastHours=pd.DataFrame(forecastHours).set_index('PredictTime')
+    return forecastToday,df_forecastHours
+
+st.markdown(f'### {"蓝田县"} 天气预报')
+forecastToday,df_forecastHours=get_city_weather(2182)
+col1,col2,col3,col4,col5,col6=st.columns(6)
+col1.metric('Weather',forecastToday['weather'])
+col2.metric('Temperature',forecastToday['temp'])
+col3.metric('Body Temperature',forecastToday['realFeel'])
+col4.metric('Humidity',forecastToday['humidity'])
+col5.metric('Wind',forecastToday['wind'])
+col6.metric('UpdateTime',forecastToday['updateTime'])
+c1 = (
+            Line()
+            .add_xaxis(df_forecastHours.index.to_list())
+            .add_yaxis('Temperature', df_forecastHours.Temperature.values.tolist())
+            .add_yaxis('Body Temperature', df_forecastHours['Body Temperature'].values.tolist())
+            .set_global_opts(
+                title_opts=opts.TitleOpts(title="24 Hours Forecast"),
+                xaxis_opts=opts.AxisOpts(type_="category"),
+                yaxis_opts=opts.AxisOpts(type_="value",axislabel_opts=opts.LabelOpts(formatter="{value} °C")),
+                tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross")
+                )
+            .set_series_opts(label_opts=opts.LabelOpts(formatter=JsCode("function(x){return x.data[1] + '°C';}")))
+        )
+t = Timeline(init_opts=opts.InitOpts(theme=ThemeType.LIGHT,width='1200px'))
+t.add_schema(play_interval=10000,is_auto_play=True)
+t.add(c1, "24 Hours Forecast")
+components.html(t.render_embed(), width=1200, height=520)
+with st.expander("24 Hours Forecast Data"):
+    st.table(df_forecastHours.style.format({'Temperature':'{}°C','Body Temperature':'{}°C','Humidity':'{}%'}))
 
 # 调研纪实
-days = ['第一天', '第二天','第三天','第四天','第五天','第六天','第七天','第八天']
+st.title('支教活动纪实')
+days = ['空' ,'第一天', '第二天','第三天','第四天','第五天','第六天','第七天','第八天']
 day = st.selectbox(
   "您想查看哪一天的纪实？",
   days,
   index=0
   )
-day_number = days.index(day)+1
+day_number = days.index(day)
 source_link = 'D{}/*.jpg'.format(day_number)
 image_D1_source = glob.glob(source_link)
 if len(image_D1_source)==0:
@@ -91,4 +162,5 @@ part_df = pd.DataFrame(
     columns=['lat', 'lon'])
 st.map(part_df)
 
-
+# 学校实地考察
+st.header('4.学校实地考察')
