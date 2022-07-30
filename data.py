@@ -18,13 +18,17 @@ from pyecharts import options as opts
 from pyecharts.commons.utils import JsCode
 import streamlit.components.v1 as components
 
-
 st.set_page_config(page_title="书沁蓝田，情暖校园",page_icon=":rainbow:",layout="wide",initial_sidebar_state="auto")
 # 页眉
-st.info('书沁蓝田，情暖校园:heart:')
+st.title('书沁蓝田，情暖校园:heart:')
+st.title(':rainbow:    :rainbow:     :rainbow: ')
+st.image(Image.open('1.jpg'))
+
 
 # 天气
 st.session_state.date_time=datetime.datetime.now() + datetime.timedelta(hours=8)
+
+
 @st.cache(ttl=3600)
 def get_city_weather(cityId):
     url='https://h5ctywhr.api.moji.com/weatherDetail'
@@ -56,6 +60,7 @@ def get_city_weather(cityId):
         forecastHours.append(tmp)
     df_forecastHours=pd.DataFrame(forecastHours).set_index('PredictTime')
     return forecastToday,df_forecastHours
+
 
 st.markdown(f'### {"蓝田县"} 天气预报')
 forecastToday,df_forecastHours=get_city_weather(2182)
@@ -111,8 +116,8 @@ for i in range(len(image_D1_source)):
 
 # 读取基本数据集
 df=pd.read_csv("list.csv")
-department = df['学校'].unique().tolist()#学校列
-number = df['学生人数'].unique().tolist()#人数列
+department = df['学校'].unique().tolist() # 学校列
+number = df['学生人数'].unique().tolist() # 人数列
 position=[[34.15,109.32]]
 for i in range(df.shape[0]):
     position.append([df.values[i,1],df.values[i,2]])
@@ -164,3 +169,47 @@ st.map(part_df)
 
 # 学校实地考察
 st.header('4.学校实地考察')
+schools=['空','文姬中学','北关实验中学','蓝田初级中学','西安田家炳中学']
+school = st.selectbox(
+  "您想去哪一所中学考察？",
+  schools,
+  index=0
+  )
+school_number = schools.index(school)
+school_link = 'S{}/*.jpg'.format(school_number)
+image_S1_source = glob.glob(school_link)
+if len(image_S1_source) == 0:
+    st.warning('目前记录为空')
+if len(image_S1_source) != 0:
+    # 读取学校基本信息
+    school_data1 = pd.read_csv("S{}/data1.csv".format(school_number))
+    st.text('基本设施信息')
+    st.write(school_data1)
+
+    school_data2 = pd.read_csv("S{}/data2.csv".format(school_number))
+    st.text('学业学生发展信息')
+    st.write(school_data2)
+
+    # 记录获取的信息
+    f = open('S{}/data.txt'.format(school_number),encoding='utf-8')
+    txt = f.read()
+    st.text(txt)
+    #显示学校所在位置
+    st.image(Image.open('S{}/map.jpg'.format(school_number)))
+    if school_number == 1:
+        items = ['空', '学校整体图','化学实验室','微机室','操场','食堂']
+    else :
+        items =[]
+    item = st.selectbox(
+        "您想查看哪一项记录？",
+        items,
+        index=0
+    )
+    item_number = items.index(item)
+    item_link = 'S{}/*T{}.jpg'.format(school_number,item_number)
+    image_T_source = glob.glob(item_link)
+    image_T = []
+    for i in range(len(image_T_source)):
+        image_T.append(Image.open(image_T_source[i]))
+        st.image(image_T[i])
+
